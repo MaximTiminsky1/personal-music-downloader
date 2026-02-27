@@ -91,17 +91,29 @@ export function OAuthTab() {
               onChange={(e) => setCode(e.target.value)}
               placeholder="https://music.yandex.ru/?code={***}&cid={***}"
             />
-            <Button
-              onClick={() => {
-                if (code.trim()) {
-                  setStep('code')
-                }
-              }}
-              fullWidth
-              disabled={!code.trim()}
-            >
-              Continue
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setStep('initial')
+                  setCode('')
+                  setAuthUrl('')
+                }}
+                variant="secondary"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={() => {
+                  if (code.trim()) {
+                    setStep('code')
+                  }
+                }}
+                fullWidth
+                disabled={!code.trim()}
+              >
+                Continue
+              </Button>
+            </div>
           </div>
         </>
       )}
@@ -122,8 +134,33 @@ export function OAuthTab() {
           </Button>
 
           {exchangeCodeMutation.error && (
-            <div className="glass p-3 rounded-lg bg-red-500/20 border-red-400/30">
+            <div className="glass p-3 rounded-lg bg-red-500/20 border-red-400/30 space-y-3">
               <p className="text-red-100">Code exchange error</p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setStep('waiting')
+                    setCode('')
+                    exchangeCodeMutation.reset()
+                  }}
+                  variant="secondary"
+                  fullWidth
+                >
+                  Try again
+                </Button>
+                <Button
+                  onClick={() => {
+                    setStep('initial')
+                    setCode('')
+                    setAuthUrl('')
+                    exchangeCodeMutation.reset()
+                  }}
+                  variant="secondary"
+                  fullWidth
+                >
+                  Start over
+                </Button>
+              </div>
             </div>
           )}
         </>

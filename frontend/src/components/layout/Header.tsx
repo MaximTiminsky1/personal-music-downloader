@@ -20,8 +20,9 @@ export function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <img src="/icon.png" alt="Logo" className="w-8 h-8" />
             <h1 className="text-2xl font-bold text-shadow">
-              🎵 Personal Music Downloader
+              Personal Music Downloader
             </h1>
           </div>
 
