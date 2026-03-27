@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import type { Track } from '@/types/api'
 import { useUIStore } from '@/store/uiStore'
+import { usePlayerStore } from '@/store/playerStore'
+import { tracksApi } from '@/services/api'
 import { Button } from '../ui/Button'
 
 interface TrackItemProps {
@@ -10,10 +13,32 @@ interface TrackItemProps {
 }
 
 export function TrackItem({ track, onDownload, isDownloading }: TrackItemProps) {
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false)
   const { selectedTracks, toggleTrack, downloadingTracks, completedTracks } = useUIStore()
+  const { currentTrack, isPlaying, setCurrentTrack, togglePlay } = usePlayerStore()
   const isSelected = selectedTracks.has(track.id)
   const downloadProgress = downloadingTracks.get(track.id)
   const isCompleted = completedTracks.has(track.id)
+  const isCurrentTrack = currentTrack?.id === track.id
+
+  const handlePlay = async () => {
+    if (isCurrentTrack) {
+      togglePlay()
+      return
+    }
+
+    setIsLoadingUrl(true)
+    try {
+      const response = await tracksApi.getTrackUrl(track.id)
+      if (response.success && response.url) {
+        setCurrentTrack(track, response.url)
+      }
+    } catch (error) {
+      console.error('Failed to get track URL:', error)
+    } finally {
+      setIsLoadingUrl(false)
+    }
+  }
 
   return (
     <motion.div
@@ -53,34 +78,51 @@ export function TrackItem({ track, onDownload, isDownloading }: TrackItemProps) 
           </div>
         </div>
 
-        {downloadProgress !== undefined ? (
-          <div className="w-32">
-            <div className="glass rounded-full h-2 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${downloadProgress}%` }}
-                className="h-full bg-green-400"
-              />
+        <div className="flex gap-2">
+          <Button
+            variant={isCurrentTrack && isPlaying ? "secondary" : "ghost"}
+            onClick={handlePlay}
+            disabled={isLoadingUrl}
+            className="w-10 h-10 p-0 text-xl flex items-center justify-center"
+          >
+            {isLoadingUrl ? (
+              <div className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : isCurrentTrack && isPlaying ? (
+              '⏸'
+            ) : (
+              '▶'
+            )}
+          </Button>
+
+          {downloadProgress !== undefined ? (
+            <div className="w-32">
+              <div className="glass rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${downloadProgress}%` }}
+                  className="h-full bg-green-400"
+                />
+              </div>
+              <p className="text-xs text-center mt-1 opacity-75">{downloadProgress}%</p>
             </div>
-            <p className="text-xs text-center mt-1 opacity-75">{downloadProgress}%</p>
-          </div>
-        ) : isCompleted ? (
-          <Button
-            variant="secondary"
-            disabled
-            className="opacity-60"
-          >
-            ✅ Downloaded
-          </Button>
-        ) : (
-          <Button
-            variant="secondary"
-            onClick={() => onDownload(track.id)}
-            disabled={isDownloading}
-          >
-            ⬇️ Download
-          </Button>
-        )}
+          ) : isCompleted ? (
+            <Button
+              variant="secondary"
+              disabled
+              className="opacity-60"
+            >
+              ✅ Downloaded
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={() => onDownload(track.id)}
+              disabled={isDownloading}
+            >
+              ⬇️ Download
+            </Button>
+          )}
+        </div>
       </div>
     </motion.div>
   )

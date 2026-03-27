@@ -5,7 +5,9 @@ import type {
   StatusResponse,
   PlaylistsResponse,
   TracksResponse,
+  PaginatedTracksResponse,
   DownloadResponse,
+  TrackUrlResponse,
   OAuthUrlResponse,
 } from '@/types/api'
 
@@ -83,6 +85,16 @@ export const playlistsApi = {
 export const tracksApi = {
   async parseLink(link: string): Promise<TracksResponse> {
     const { data} = await api.post<TracksResponse>('/api/parse', { link })
+    return data
+  },
+
+  async getLikedTracks(page: number = 0, limit: number = 20): Promise<PaginatedTracksResponse> {
+    const { data } = await api.post<PaginatedTracksResponse>('/api/liked-tracks', { page, limit })
+    return data
+  },
+
+  async getTrackUrl(trackId: string): Promise<TrackUrlResponse> {
+    const { data } = await api.post<TrackUrlResponse>('/api/track-url', { track_id: trackId })
     return data
   },
 

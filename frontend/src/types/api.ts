@@ -43,10 +43,25 @@ export interface TracksResponse {
   tracks: Track[]
 }
 
+export interface PaginatedTracksResponse {
+  success: boolean
+  tracks: Track[]
+  total: number
+  page: number
+  has_more: boolean
+}
+
 export interface DownloadResponse {
   success: boolean
   message: string
   filename?: string
+}
+
+export interface TrackUrlResponse {
+  success: boolean
+  url: string
+  bitrate: number
+  codec: string
 }
 
 export interface OAuthUrlResponse {

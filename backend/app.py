@@ -994,6 +994,104 @@ def format_track_info(track):
         'codec': codec
     }
 
+@app.route('/api/liked-tracks', methods=['POST'])
+@require_session
+def get_liked_tracks(client, session_id):
+    data = request.json
+    page = data.get('page', 0)
+    limit = data.get('limit', 20)
+
+    try:
+        print(f"[DEBUG] Getting liked tracks - page: {page}, limit: {limit}")
+
+        liked_tracks = client.users_likes_tracks()
+
+        if not liked_tracks or not liked_tracks.tracks:
+            return jsonify({
+                'success': True,
+                'tracks': [],
+                'total': 0,
+                'page': page,
+                'has_more': False
+            })
+
+        total_tracks = len(liked_tracks.tracks)
+        start_idx = page * limit
+        end_idx = start_idx + limit
+
+        track_ids = [track.id for track in liked_tracks.tracks[start_idx:end_idx]]
+
+        if not track_ids:
+            return jsonify({
+                'success': True,
+                'tracks': [],
+                'total': total_tracks,
+                'page': page,
+                'has_more': False
+            })
+
+        tracks = client.tracks(track_ids)
+        tracks_info = []
+
+        for track in tracks:
+            try:
+                tracks_info.append(format_track_info(track))
+            except Exception as track_error:
+                print(f"[WARNING] Skipping unavailable track: {track_error}")
+                continue
+
+        has_more = end_idx < total_tracks
+
+        print(f"[DEBUG] Returning {len(tracks_info)} tracks, total: {total_tracks}, has_more: {has_more}")
+
+        return jsonify({
+            'success': True,
+            'tracks': tracks_info,
+            'total': total_tracks,
+            'page': page,
+            'has_more': has_more
+        })
+
+    except Exception as e:
+        print(f"[ERROR] Error getting liked tracks: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'Error: {str(e)}'}), 500
+
+
+@app.route('/api/track-url', methods=['POST'])
+@require_session
+def get_track_url(client, session_id):
+    data = request.json
+    track_id = data.get('track_id')
+
+    if not track_id:
+        return jsonify({'success': False, 'error': 'Track ID not specified'}), 400
+
+    try:
+        track = client.tracks([track_id])[0]
+        download_info = track.get_download_info()
+
+        if not download_info:
+            return jsonify({'success': False, 'error': 'Cannot get track info'}), 400
+
+        best_quality = max(download_info, key=lambda x: x.bitrate_in_kbps)
+        direct_link = best_quality.get_direct_link()
+
+        return jsonify({
+            'success': True,
+            'url': direct_link,
+            'bitrate': best_quality.bitrate_in_kbps,
+            'codec': best_quality.codec
+        })
+
+    except Exception as e:
+        print(f"[ERROR] Error getting track URL: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'Error: {str(e)}'}), 500
+
+
 @app.route('/api/download', methods=['POST'])
 @require_session
 def download_track(client, session_id):

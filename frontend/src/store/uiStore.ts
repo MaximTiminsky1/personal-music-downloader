@@ -11,7 +11,7 @@ interface UIState {
   setTracks: (tracks: Track[], playlistName?: string) => void
   clearTracks: () => void
   toggleTrack: (trackId: string) => void
-  selectAllTracks: () => void
+  selectAllTracks: (tracks?: Track[]) => void
   deselectAllTracks: () => void
   setDownloadProgress: (trackId: string, progress: number) => void
   removeDownloadProgress: (trackId: string) => void
@@ -55,9 +55,9 @@ export const useUIStore = create<UIState>((set) => ({
       return { selectedTracks: newSelected }
     }),
 
-  selectAllTracks: () =>
+  selectAllTracks: (tracks) =>
     set((state) => ({
-      selectedTracks: new Set(state.tracks.map((t) => t.id)),
+      selectedTracks: new Set((tracks || state.tracks).map((t) => t.id)),
     })),
 
   deselectAllTracks: () => set({ selectedTracks: new Set() }),

@@ -6,7 +6,9 @@ import { Header } from './components/layout/Header'
 import { Container } from './components/layout/Container'
 import { AuthTabs } from './components/auth/AuthTabs'
 import { PlaylistsList } from './components/playlists/PlaylistsList'
+import { AllTracksList } from './components/tracks/AllTracksList'
 import { TracksList } from './components/tracks/TracksList'
+import { AudioPlayer } from './components/player/AudioPlayer'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,7 +52,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 pb-32">
       <Header />
       <Container>
         {!isAuthenticated ? (
@@ -67,6 +69,7 @@ function AppContent() {
           </div>
         ) : (
           <div className="space-y-8">
+            <AllTracksList />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <PlaylistsList />
               <TracksList />
@@ -82,6 +85,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppContent />
+      <AudioPlayer />
     </QueryClientProvider>
   )
 }
